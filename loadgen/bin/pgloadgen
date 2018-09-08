@@ -1,0 +1,138 @@
+#!/usr/bin/env node
+
+/*
+ * pgloadgen: generates a simple postgres load
+ */
+
+var mod_assertplus = require('assert-plus');
+var mod_bunyan = require('bunyan');
+var mod_cmdutil = require('cmdutil');
+var mod_getopt = require('posix-getopt');
+var mod_jsprim = require('jsprim');
+var mod_path = require('path');
+
+var VError = require('verror');
+
+var lib_pgloadgen = require('../lib/pgloadgen');
+
+/* TODO this should use the default values directly from lgConfig */
+var lgUsageMessage = [
+    'Run a simple workload against a Postgres database.',
+    '',
+    'Options:',
+    '',
+    '    -c CONCURRENCY    attempt to keep CONCURRENCY requests outstanding',
+    '    (default: 1)      at any given time',
+    '',
+    '    -p HTTP_PORT      listening port for exposing Prometheus metrics',
+    '    (default: 9800)',
+    ''
+].join('\n');
+
+/* program name (for log and stderr messages) */
+var lgProgname;
+
+/* load generator config object */
+var lgConfig = {
+    'lgc_log': null,
+    'lgc_concurrency': 1,
+    'lgc_pgurl': null,
+    'lgc_http_port': 9800
+};
+
+/* load generator */
+var lgLoadGenerator;
+
+function main()
+{
+	var argv, parser, option;
+	var p;
+
+	lgProgname = mod_path.basename(process.argv[1]);
+	lgConfig.lgc_log = new mod_bunyan({
+	    'name': lgProgname,
+	    'level': process.env['LOG_LEVEL'] || 'warn'
+	});
+
+	mod_cmdutil.configure({
+	    'synopses': [ '[OPTIONS] PG_URL' ],
+	    'usageMessage': lgUsageMessage
+	});
+
+	/*
+	 * Parse command-line options.
+	 */
+	parser = new mod_getopt.BasicParser('c:(concurrency)p:(http-port)',
+	    process.argv);
+	while ((option = parser.getopt()) !== undefined) {
+		switch (option.option) {
+		case 'c':
+			/* -c/--concurrency option */
+			p = mod_jsprim.parseInteger(option.optarg, {
+			    'allowSign': false,
+			    'trimWhitespace': true
+			});
+			if ((!(p instanceof Error)) && p <= 0) {
+				p = new Error('expected positive integer');
+			}
+			if (p instanceof Error) {
+				p = new VError(p,
+				    'invalid value for -c/--concurrency');
+				mod_cmdutil.usage(p);
+			}
+			mod_assertplus.number(p);
+			mod_assertplus.ok(p > 0);
+			lgConfig.lgc_concurrency = p;
+			break;
+
+		case 'p':
+			/* -p/--http-port option */
+			p = mod_jsprim.parseInteger(option.optarg, {
+			    'allowSign': false,
+			    'trimWhitespace': true
+			});
+			if ((!(p instanceof Error)) && p <= 0 || p >= 65536) {
+				p = new Error('expected valid TCP port');
+			}
+			if (p instanceof Error) {
+				p = new VError(p,
+				    'invalid value for -p/--http-port');
+				mod_cmdutil.usage(p);
+			}
+			mod_assertplus.number(p);
+			mod_assertplus.ok(p > 0);
+			lgConfig.lgc_http_port = p;
+			break;
+
+		default:
+			/* error message already emitted by getopt */
+			mod_assertplus.equal('?', option.option);
+			mod_cmdutil.usage();
+			break;
+		}
+	}
+
+	/*
+	 * Parse non-option arguments.
+	 */
+	argv = process.argv.slice(parser.optind());
+	if (argv.length === 0) {
+		mod_cmdutil.usage('missing PG_URL');
+	}
+	if (argv.length > 1) {
+		mod_cmdutil.usage('unexpected arguments after PG_URL');
+	}
+
+	lgConfig.lgc_pgurl = argv[0];
+	lgLoadGenerator = lib_pgloadgen.createLoadGenerator(lgConfig);
+	lgLoadGenerator.start(function (err) {
+		if (err) {
+			mod_cmdutil.fail(err);
+		}
+
+		console.log('established connection%s',
+		    lgConfig.lgc_concurrency == 1 ? '' : 's');
+	});
+}
+
+main();

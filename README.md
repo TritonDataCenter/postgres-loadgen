@@ -3,10 +3,14 @@
 This repo will contain a small load generator for PostgreSQL that tests whether
 certain pathological behaviors are seen under simple workloads.
 
+## Status
+
+- complete: basic load generator
+
 ## ToDo
 
-- load generator
-  - support node-artedi
+- load generator work
+  - support desired workload (reads + writes)
 - prometheus
 - grafana
 - postgres setup

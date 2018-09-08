@@ -21,7 +21,7 @@ JSSTYLE = 	jsstyle
 # "check" and "docs" targets.
 #
 JSON_FILES =		package.json
-JS_FILES :=		bin/loadgen
+JS_FILES :=		bin/pgloadgen lib/pgloadgen.js
 JSL_FILES_NODE =	$(JS_FILES)
 JSSTYLE_FILES =		$(JS_FILES)
 
