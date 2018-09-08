@@ -1,0 +1,16 @@
+{
+	"name": "postgres-loadgen",
+	"version": "1.0.0",
+	"description": "simple postgres load generator for a very simple workload",
+	"dependencies": {
+		"artedi": "^1.4.1",
+		"bunyan": "^1.8.12",
+		"cmdutil": "^1.1.0",
+		"pg": "^7.4.3",
+		"posix-getopt": "^1.2.0",
+		"vasync": "^2.2.0",
+		"verror": "^1.10.0"
+	},
+	"author": "David Pacheco <dap@joyent.com>",
+	"license": "MIT"
+}

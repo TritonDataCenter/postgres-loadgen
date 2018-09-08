@@ -1,0 +1,6 @@
+[submodule "loadgen/deps/jsstyle"]
+	path = loadgen/deps/jsstyle
+	url = https://github.com/joyent/jsstyle
+[submodule "loadgen/deps/javascriptlint"]
+	path = loadgen/deps/javascriptlint
+	url = https://github.com/joyent/javascriptlint
