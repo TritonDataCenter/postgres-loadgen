@@ -11,8 +11,10 @@
 #
 # Tools
 #
-NODE = node
-NPM =  npm
+NODE =		node
+NPM =		npm
+JSL =		jsl
+JSSTYLE = 	jsstyle
 
 #
 # Configuration used by Makefile.defs and Makefile.targ to generate
@@ -49,6 +51,5 @@ include ./tools/mk/Makefile.node_modules.defs
 .PHONY: all
 all: $(STAMP_NODE_MODULES)
 
-include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_modules.targ
 include ./tools/mk/Makefile.targ
