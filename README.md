@@ -6,13 +6,12 @@ certain pathological behaviors are seen under simple workloads.
 ## Status
 
 - complete: basic load generator
+- complete: set up basic Prometheus instance
 
 ## ToDo
 
-- load generator work
-  - support desired workload (reads + writes)
-- prometheus
 - grafana
+- load generator work to support desired workload (reads + writes)
 - postgres setup
   - config file
 - figure out where to run all this

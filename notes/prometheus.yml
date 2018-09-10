@@ -1,0 +1,25 @@
+global:
+  scrape_interval:     10s 
+  evaluation_interval: 10s 
+
+#
+# Load rules once and periodically evaluate them according to the global
+# 'evaluation_interval'.
+#
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Scrape Prometheus itself.
+  - job_name: 'prometheus'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+    - targets: ['localhost:9090']
+
+  # Scrape the load generator.
+  - job_name: 'pgloadgen'
+
+    static_configs:
+      - targets: ['localhost:9800']
