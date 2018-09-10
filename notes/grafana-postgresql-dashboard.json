@@ -551,7 +551,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_bgwriter_buffers_alloc",
+          "expr": "sum(irate(pg_stat_bgwriter_buffers_alloc[1m]))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -559,21 +559,21 @@
           "refId": "A"
         },
         {
-          "expr": "pg_stat_bgwriter_buffers_checkpoint",
+          "expr": "sum(irate(stat_bgwriter_buffers_checkpoint[1m]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "buffer writes by checkpointer",
           "refId": "B"
         },
         {
-          "expr": "pg_stat_bgwriter_buffers_backend",
+          "expr": "sum(irate(pg_stat_bgwriter_buffers_backend[1m]))  ",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "buffer writes by backends",
           "refId": "C"
         },
         {
-          "expr": "pg_stat_bgwriter_buffers_clean",
+          "expr": "sum(irate(pg_stat_bgwriter_buffers_clean[1m]))  ",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "buffer writes by bgwriter",
@@ -622,7 +622,7 @@
     },
     {
       "aliasColors": {},
-      "bars": false,
+      "bars": true,
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_PROMETHEUS}",
@@ -644,7 +644,7 @@
         "total": false,
         "values": true
       },
-      "lines": true,
+      "lines": false,
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
@@ -654,7 +654,7 @@
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
-      "stack": false,
+      "stack": true,
       "steppedLine": false,
       "targets": [
         {
@@ -953,5 +953,5 @@
   "timezone": "",
   "title": "PostgreSQL dashboard",
   "uid": "m0FvhZomk",
-  "version": 12
+  "version": 13
 }
