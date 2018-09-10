@@ -31,3 +31,9 @@ certain pathological behaviors are seen under simple workloads.
   - spills out of DRAM
   - next vacuum
   - next anti-wraparound vacuum
+
+## Latest versions tried
+
+prometheus@2.3.2
+grafana@5.2.4
+pgstatsmon@c3c085eeac127b37674809d0d41bd5fc368e744e
