@@ -7,9 +7,11 @@
 		"assert-plus": "^1.0.0",
 		"bunyan": "^1.8.12",
 		"cmdutil": "^1.1.0",
+		"extsprintf": "^1.0.0",
 		"jsprim": "^2.0.0",
-		"pg": "^7.4.3",
+		"pg": "7.4.3",
 		"posix-getopt": "^1.2.0",
+		"uuid": "3.3.2",
 		"vasync": "^2.2.0",
 		"verror": "^1.10.0"
 	},

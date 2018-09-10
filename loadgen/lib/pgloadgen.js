@@ -8,12 +8,16 @@
 
 var mod_assertplus = require('assert-plus');
 var mod_artedi = require('artedi');
+var mod_extsprintf = require('extsprintf');
 var mod_http = require('http');
 var mod_jsprim = require('jsprim');
 var mod_pg = require('pg');
+var mod_uuid = require('uuid');
 var mod_vasync = require('vasync');
 
 var VError = require('verror');
+
+var sprintf = mod_extsprintf.sprintf;
 
 /* Exported interface */
 exports.createLoadGenerator = createLoadGenerator;
@@ -52,6 +56,7 @@ function LoadGenerator(args)
 	this.lg_error = null;		/* fatal error, if any */
 	this.lg_pgclients = null;	/* postgres client */
 	this.lg_metric_server = null;	/* metric HTTP server */
+	this.lg_maxid = null;		/* max id in the table */
 
 	/* artedi metrics */
 	this.lg_g_nconns = this.lg_collector.gauge({
@@ -265,17 +270,57 @@ LoadGenerator.prototype.clientRequest = function (client)
 	 * could also add client URL information to the artedi metrics.
 	 */
 	var lg = this;
-	var start;
-	var sql = 100 * Math.random() < 5 ?
-	    'SELECT FOO;' : 'SELECT pg_sleep(1)';
-	var fields = {
-	    'type': 'trivial',	/* TODO: later: read/write */
-	    'sql': sql
-	};
-	var histfields = {
+	var r, maxid, start, sql, fields, histfields;
+
+	r = Math.random();
+	fields = {};
+	/*
+	 * XXX when selecting or updating using "maxid", we should bump an error
+	 * counter when maxid is null and skip the operation.
+	 */
+	maxid = this.lg_maxid;
+	mod_assertplus.ok(typeof (maxid) == 'number' || maxid === null);
+	if (r < 0.01) {
+		/* 1%: read latest max id */
+		sql = sprintf('SELECT MAX(id) AS max FROM test_table;');
+		fields['type'] = 'fetch_max';
+	} else if (r < 0.2) {
+		/* 20%: read operation */
+		sql = sprintf(
+		    'BEGIN; SELECT * FROM test_table WHERE id = %d; COMMIT;',
+		    maxid === null ? 1 : Math.floor(maxid * Math.random()));
+		fields['type'] = 'read_row';
+	} else if (r < 0.8) {
+		/* 60%: insert operation */
+		sql = sprintf('BEGIN; INSERT INTO test_table ' +
+		    '(c1, c2, c3, c4, c5) VALUES ' +
+		    '(\'%s\', \'%s\', \'%s\', \'%s\', \'%s\'); COMMIT;',
+		    mod_uuid.v4(), mod_uuid.v4(), mod_uuid.v4(), mod_uuid.v4(),
+		    mod_uuid.v4());
+		fields['type'] = 'insert_row';
+	} else {
+		/*
+		 * 19%: update operation.
+		 * This is not a great construct, but matches the target
+		 * workload.
+		 */
+		sql = sprintf('BEGIN; SELECT * FROM test_table WHERE id = %d ' +
+		    ' FOR UPDATE; UPDATE test_table SET c1 = \'%s\', ' +
+		    ' c2 = \'%s\', c3 = \'%s\', c4 = \'%s\', c5 = \'%s\' ' +
+		    'WHERE id = %d; COMMIT;',
+		    maxid === null ? 1 : Math.floor(maxid * Math.random()),
+		    mod_uuid.v4(), mod_uuid.v4(), mod_uuid.v4(), mod_uuid.v4(),
+		    mod_uuid.v4(), maxid);
+		fields['type'] = 'update_row';
+	}
+
+	/*
+	 * TODO it would be nice to put "sql" into "fields", but we'd want to
+	 * normalize the queries to avoid an enormous number of metrics.
+	 */
+	histfields = {
 	    'type': fields['type']
 	};
-
 	lg.lg_log.trace(fields, 'begin query');
 	start = process.hrtime();
 	client.query(sql, function (err, result) {
@@ -288,6 +333,36 @@ LoadGenerator.prototype.clientRequest = function (client)
 		    'result': err ? 'error': 'ok',
 		    'timeMicrosec': delta
 		}, 'finished query');
+
+		if (fields['type'] == 'fetch_max') {
+			/*
+			 * Update the max id seen.
+			 */
+			if (!err) {
+				mod_assertplus.arrayOfObject(result.rows);
+				mod_assertplus.equal(result.rows.length, 1);
+				if (result.rows[0]['max'] === null) {
+					mod_assertplus.strictEqual(
+					    lg.lg_maxid, null);
+					/* No other action needed. */
+				} else {
+					mod_assertplus.string(
+					    result.rows[0]['max']);
+					err = mod_jsprim.parseInteger(
+					    result.rows[0]['max']);
+					if (!(err instanceof Error)) {
+						lg.lg_maxid = err;
+						err = null;
+					}
+				}
+			}
+
+			if (err) {
+				err = new VError(err, 'failed to update maxid');
+				lg.lg_log.error(err);
+				/* Fall through to error case. */
+			}
+		}
 
 		if (err) {
 			err = new VError(err, 'query failed');
@@ -306,7 +381,6 @@ LoadGenerator.prototype.clientRequest = function (client)
 
 		lg.lg_c_ndone.add(1, fields);
 		lg.lg_hist_queries.observe(delta, histfields);
-
 		lg.clientRequest(client);
 	});
 
