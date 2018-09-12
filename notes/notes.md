@@ -46,7 +46,7 @@ Setting up Prometheus:
 
 Starting Prometheus:
 
-    ./prometheus --config.file=prometheus.yml | tee -a prometheus.log
+    ./prometheus --config.file=prometheus.yml --storage.tsdb.retention=180d | tee -a prometheus.log
 
 ## Grafana
 

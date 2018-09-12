@@ -1,6 +1,7 @@
 global:
   scrape_interval:     10s 
   evaluation_interval: 10s 
+  scrape_timeout:       5s
 
 #
 # Load rules once and periodically evaluate them according to the global
@@ -20,6 +21,10 @@ scrape_configs:
 
   # Scrape the load generator.
   - job_name: 'pgloadgen'
-
     static_configs:
       - targets: ['localhost:9800']
+
+  # Scrape pgstatsmon
+  - job_name: 'pgstatsmon'
+    static_configs:
+      - targets: ['localhost:8881']
