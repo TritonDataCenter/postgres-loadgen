@@ -14,7 +14,6 @@ certain pathological behaviors are seen under simple workloads.
 
 - can we collect CPU usage information in Prometheus for the load generator(s)?
 - add a query that generates errors occasionally to make sure the metrics work
-- review postgresql config file
 - figure out where to run all this
   - Macbook VM?
   - one container for loadgen, prometheus, grafana
