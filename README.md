@@ -13,15 +13,6 @@ certain pathological behaviors are seen under simple workloads.
 - complete: add injected errors for validating metrics
 - complete: add pgloadgen gauge for max latency
 
-## ToDo
-
-- figure out where to run all this
-  - Macbook VM?
-  - one container for loadgen, prometheus, grafana
-  - one container for postgres
-    - need ZFS for snapshots
-    - need lots of disk space (bigger than DRAM)
-
 ## Ideal test plan
 
 - set up all zones
