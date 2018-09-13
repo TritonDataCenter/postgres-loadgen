@@ -1,0 +1,32 @@
+Run 1 (thrown away)
+
+- When: 2018-09-13T17:00Z to 2200Z
+
+Notes:
+- spent a while adding metrics and fleshing out dashboards
+- realized after several hours that the dataset was not created with an 8K
+  recordsize, so stopped the run and began Run 2
+
+Observations of note about the system:
+- As predicted, space usage stops increasing for some period after vacuum
+- Autovacuum progress is useful, but there's a long period after reaching 100%
+  while it's still running (about as long as the initial part)
+- All latency did get worse after about half an hour, but that's when I
+  increased concurrency.
+- Average latency got steadily worse after that.  Operations per second goes
+  down steadily.  CPU usage of the load generator goes down steadily.
+- Buffer allocations increased for a long time starting around noon, which is
+  about when the database size exceeded shared_buffers.
+- The only errors were the injected ones.
+- I've not yet seen any notable degradation in latency when autovacuum runs.
+- There are periodic spikes in buffer writes by backends that I do not
+  understand.  They don't correlate with vacuum or anything else I looked at.
+
+Observations about the tooling:
+- p99 latency is often much higher than observed max, presumably because of
+  bucket sizes.
+- max latency is reset when the load generator restarts and asymptotically
+  increases after that.  I think this makes sense.
+- When pgstatsmon restarts, the total vacuum+analyze count metrics get reset.
+  These are less useful than the observed autovacuum metrics we now have
+  anyway.
