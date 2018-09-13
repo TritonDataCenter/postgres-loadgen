@@ -9,10 +9,10 @@ certain pathological behaviors are seen under simple workloads.
 - complete: set up basic Prometheus instance
 - complete: set up basic Grafana instance with dashboard
 - complete: basic load generator work for reads + writes
+- complete: add CPU usage to load generator
 
 ## ToDo
 
-- can we collect CPU usage information in Prometheus for the load generator(s)?
 - add a query that generates errors occasionally to make sure the metrics work
 - figure out where to run all this
   - Macbook VM?

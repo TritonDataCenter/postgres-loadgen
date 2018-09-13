@@ -68,5 +68,5 @@ Starting Grafana:
 
 Starting load generator (fill in HOST\_IP and PORT):
 
-    ./bin/pgloadgen -c 1 postgres://postgres:postgres@HOST_IP:PORT/postgres
+    ./bin/pgloadgen -c 1 postgres://postgres:postgres@HOST_IP:PORT/postgres | tee -a pgloadgen.out
 

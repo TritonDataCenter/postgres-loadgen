@@ -58,6 +58,8 @@ function LoadGenerator(args)
 	this.lg_metric_server = null;	/* metric HTTP server */
 	this.lg_maxid = null;		/* max id in the table */
 
+	this.lg_cpu_last = null;	/* last CPU usage reading */
+
 	/* artedi metrics */
 	this.lg_g_nconns = this.lg_collector.gauge({
 	    'name': 'pgloadgen_nconns',
@@ -83,10 +85,20 @@ function LoadGenerator(args)
 	    'name': 'pgloadgen_query_latency_us',
 	    'help': 'query latency'
 	});
+	this.lg_c_cpu_user = this.lg_collector.counter({
+	    'name': 'pgloadgen_cpu_user_us',
+	    'help': 'user CPU time for process'
+	});
+	this.lg_c_cpu_sys = this.lg_collector.counter({
+	    'name': 'pgloadgen_cpu_system_us',
+	    'help': 'system CPU time for process'
+	});
 
 	this.lg_g_nconns.set(0, {
 	    'pgUrl': this.lg_pgurl
 	});
+
+	this.scheduleTick();
 }
 
 LoadGenerator.prototype.start = function (callback)
@@ -385,4 +397,30 @@ LoadGenerator.prototype.clientRequest = function (client)
 	});
 
 	lg.lg_c_nstarted.add(1, fields);
+};
+
+LoadGenerator.prototype.scheduleTick = function ()
+{
+	var lg = this;
+	setTimeout(function tick() { lg.tick(); }, 1000);
+};
+
+LoadGenerator.prototype.tick = function ()
+{
+	var cur, last;
+
+	this.scheduleTick();
+
+	last = this.lg_cpu_last;
+	cur = process.cpuUsage();
+	mod_assertplus.object(cur, 'cpuusage');
+	mod_assertplus.number(cur.user, 'cpuusage.user');
+	mod_assertplus.number(cur.system, 'cpuusage.system');
+
+	if (last !== null) {
+		this.lg_c_cpu_user.add(cur.user - last.user);
+		this.lg_c_cpu_sys.add(cur.system - last.system);
+	}
+
+	this.lg_cpu_last = cur;
 };
