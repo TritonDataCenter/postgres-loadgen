@@ -11,6 +11,7 @@ certain pathological behaviors are seen under simple workloads.
 - complete: basic load generator work for reads + writes
 - complete: add CPU usage to load generator
 - complete: add injected errors for validating metrics
+- complete: add pgloadgen gauge for max latency
 
 ## ToDo
 
@@ -32,8 +33,8 @@ certain pathological behaviors are seen under simple workloads.
   - next vacuum
   - next anti-wraparound vacuum
 
-## Latest versions tried
+## Versions tried
 
-prometheus@2.3.2
-grafana@5.2.4
-pgstatsmon@c3c085eeac127b37674809d0d41bd5fc368e744e
+- prometheus@2.3.2, prometheus@2.4.0
+- grafana@5.2.4
+- pgstatsmon@c3c085eeac127b37674809d0d41bd5fc368e744e

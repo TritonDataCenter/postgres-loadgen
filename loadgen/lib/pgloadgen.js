@@ -59,11 +59,16 @@ function LoadGenerator(args)
 	this.lg_maxid = null;		/* max id in the table */
 
 	this.lg_cpu_last = null;	/* last CPU usage reading */
+	this.lg_lat_max = {};		/* max latency, by type */
 
 	/* artedi metrics */
 	this.lg_g_nconns = this.lg_collector.gauge({
 	    'name': 'pgloadgen_nconns',
 	    'help': 'count of open connections'
+	});
+	this.lg_g_maxlat = this.lg_collector.gauge({
+	    'name': 'pgloadgen_query_latency_max_us',
+	    'help': 'maximum query latency observed'
 	});
 	this.lg_c_nstarted = this.lg_collector.counter({
 	    'name': 'pgloadgen_nqueries_started',
@@ -396,6 +401,12 @@ LoadGenerator.prototype.clientRequest = function (client)
 			});
 		} else {
 			histfields['result'] = 'ok';
+		}
+
+		if (!mod_jsprim.hasKey(lg.lg_lat_max, fields['type']) ||
+		    lg.lg_lat_max[fields['type']] < delta) {
+			lg.lg_lat_max[fields['type']] = delta;
+			lg.lg_g_maxlat.set(delta, { 'type': fields['type'] });
 		}
 
 		lg.lg_c_ndone.add(1, fields);
