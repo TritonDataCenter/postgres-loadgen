@@ -296,13 +296,20 @@ LoadGenerator.prototype.clientRequest = function (client)
 		/* 1%: read latest max id */
 		sql = sprintf('SELECT MAX(id) AS max FROM test_table;');
 		fields['type'] = 'fetch_max';
-	} else if (r < 0.2) {
+	} else if (r < 0.02) {
+		/*
+		 * 1%: induce an error (unknown function called) to make sure
+		 * those metrics look right.
+		 */
+		sql = sprintf('SELECT injected_error();');
+		fields['type'] = 'injected_error';
+	} else if (r < 0.22) {
 		/* 20%: read operation */
 		sql = sprintf(
 		    'BEGIN; SELECT * FROM test_table WHERE id = %d; COMMIT;',
 		    maxid === null ? 1 : Math.floor(maxid * Math.random()));
 		fields['type'] = 'read_row';
-	} else if (r < 0.8) {
+	} else if (r < 0.82) {
 		/* 60%: insert operation */
 		sql = sprintf('BEGIN; INSERT INTO test_table ' +
 		    '(c1, c2, c3, c4, c5) VALUES ' +
@@ -312,7 +319,7 @@ LoadGenerator.prototype.clientRequest = function (client)
 		fields['type'] = 'insert_row';
 	} else {
 		/*
-		 * 19%: update operation.
+		 * 18%: update operation.
 		 * This is not a great construct, but matches the target
 		 * workload.
 		 */
