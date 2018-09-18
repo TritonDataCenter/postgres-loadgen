@@ -1,6 +1,89 @@
-Run 2 (thrown away)
+Run 2
 
-- When: 2018-09-13T22:08Z
+- When: 2018-09-13T22:08Z to 2018-09-17
+- Manual "VACUUM FREEZE" from 2018-09-17T17:53:59Z to 2018-09-17T23:12:07Z
+- 
 
 Notes:
 - Created a new dataset for the database with an 8K recordsize.
+- The data from this experiment has been reasonably smooth.
+- There was no observable impact on latency or throughput for the normal vacuum
+  operations.  Shortly before running out of space, I manually kicked off a
+  "VACUUM FREEZE" (see above for timing), which had a major impact on both of
+  these.
+- After observing the massive degradation, I made a few observations:
+  - Dirty buffer writes by non-checkpointer, non-bgwriter backends went up as
+    we've seen in other experiments.  However, I did not see dirty buffers
+    written by non-autovacuum backends.
+  - The autovacuum process was spending over 80% of its time blocked in
+    zfs_write() waiting for a transaction group to open.
+  - There was neither ZFS write throttle activity (as reported by the
+    `delay-mintime` DTrace probe) nor zone throttle activity (as reported by
+    vfsstat).
+  - There was a lot of metaslab loading and unloading.  I tested a workaround
+    for OS-7151.  This was applied at 2018-09-17T21:24:54 and significantly
+    improved average latency and throughput.
+  - The effect on read throughput was essentially the same as the effect on
+    write throughput.
+
+Observations of note about the system:
+- I discovered the source of the occasional periodic spikes in
+  buffers-written-by-backends.  They're coming from ANALYZE activity.
+- After about 24 hours, the database has grown to about 16.5 GiB.  Average
+  latency climbed slowly from 4ms to 16ms, with tuple operations declining from
+  a little over 1000 inserts per second to about 250.
+- Autovacuums activity has not had any notable impact on even p99 latency,
+  except maybe a handful of spikes from about 150ms to about 200ms.
+- Manual "VACUUM FREEZE" impact had major impact.  See notes above.
+
+VACUUM FREEZE:
+
+    $ date -u; psql -c 'VACUUM FREEZE VERBOSE test_table;' postgres; date -u
+    September 17, 2018 at 05:53:59 PM GMT
+    INFO:  vacuuming "public.test_table"
+    INFO:  scanned index "by_id" to remove 8845231 row versions
+    DETAIL:  CPU 22.35s/53.68u sec elapsed 423.24 sec.
+    INFO:  scanned index "by_c1" to remove 8845231 row versions
+    DETAIL:  CPU 112.00s/267.11u sec elapsed 3256.93 sec.
+    INFO:  scanned index "by_c2" to remove 8845231 row versions
+    DETAIL:  CPU 115.78s/279.04u sec elapsed 2928.21 sec.
+    INFO:  scanned index "by_c3" to remove 8845231 row versions
+    DETAIL:  CPU 115.32s/282.42u sec elapsed 2536.05 sec.
+    INFO:  "test_table": removed 8845231 row versions in 905665 pages
+    DETAIL:  CPU 173.52s/48.38u sec elapsed 3134.24 sec.
+    INFO:  index "by_id" now contains 103508795 row versions in 306272 pages
+    DETAIL:  2835724 index row versions were removed.
+    0 index pages have been deleted, 0 are currently reusable.
+    CPU 0.00s/0.00u sec elapsed 0.00 sec.
+    INFO:  index "by_c1" now contains 103508795 row versions in 1067871 pages
+    DETAIL:  8845231 index row versions were removed.
+    0 index pages have been deleted, 0 are currently reusable.
+    CPU 0.00s/0.00u sec elapsed 0.00 sec.
+    INFO:  index "by_c2" now contains 103508795 row versions in 1071283 pages
+    DETAIL:  8845231 index row versions were removed.
+    0 index pages have been deleted, 0 are currently reusable.
+    CPU 0.00s/0.00u sec elapsed 0.00 sec.
+    INFO:  index "by_c3" now contains 103508795 row versions in 1075924 pages
+    DETAIL:  8845231 index row versions were removed.
+    0 index pages have been deleted, 0 are currently reusable.
+    CPU 0.00s/0.00u sec elapsed 0.00 sec.
+    INFO:  "test_table": found 1172506 removable, 103508795 nonremovable row versions in 3139449 out of 3139449 pages
+    DETAIL:  1 dead row versions cannot be removed yet.
+    There were 7938368 unused item pointers.
+    Skipped 0 pages due to buffer pins.
+    0 pages are entirely empty.
+    CPU 869.94s/1061.32u sec elapsed 19087.39 sec.
+    INFO:  vacuuming "pg_toast.pg_toast_16391"
+    INFO:  index "pg_toast_16391_index" now contains 0 row versions in 1 pages
+    DETAIL:  0 index row versions were removed.
+    0 index pages have been deleted, 0 are currently reusable.
+    CPU 0.00s/0.00u sec elapsed 0.00 sec.
+    INFO:  "pg_toast_16391": found 0 removable, 0 nonremovable row versions in 0 out of 0 pages
+    DETAIL:  0 dead row versions cannot be removed yet.
+    There were 0 unused item pointers.
+    Skipped 0 pages due to buffer pins.
+    0 pages are entirely empty.
+    CPU 0.00s/0.00u sec elapsed 0.00 sec.
+    VACUUM
+    September 17, 2018 at 11:12:07 PM GMT
+    dap@cicely.dev ~ $ 
