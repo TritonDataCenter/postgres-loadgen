@@ -1,8 +1,8 @@
 Run 2
 
-- When: 2018-09-13T22:08Z to 2018-09-17
-- Manual "VACUUM FREEZE" from 2018-09-17T17:53:59Z to 2018-09-17T23:12:07Z
-- 
+- When: 2018-09-13T22:08Z to 2018-09-18T00:50Z
+- Manual "VACUUM FREEZE" from 2018-09-17T17:53:59Z to 2018-09-17T23:12:07Z.
+- Applied OS-7151 workaround at 2018-09-17T21:24:54Z.
 
 Notes:
 - Created a new dataset for the database with an 8K recordsize.
