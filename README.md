@@ -1,9 +1,9 @@
 # postgres-loadgen
 
-This repository contains tools and write-ups related to a PostgreSQL performance
-experiment intended to replicate behavior observed with PostgreSQL in Manta.
-The main goal of the test was to see what would happen to performance of this
-particular workload (described below) over an extended period.
+This repository contains tools, notes, and data related to a PostgreSQL
+performance experiment intended to replicate behavior observed with PostgreSQL
+in Manta.  The main goal of the test was to see what would happen to performance
+of this particular workload (described below) over an extended period.
 
 Essentially, the experiment involved:
 
@@ -150,7 +150,7 @@ The first run was used to make sure the appropriate configuration and metrics
 were in place.  Several changes were made during this run, resulting in the
 configuration described above.  Then PostgreSQL was stopped.  The filesystem was
 rolled back to the initial snapshot, and a second, clean run was started.
-Results are available from the first trun, but they're not useful, since the
+Results are available from the first run, but they're not useful, since the
 configuration was inappropriate and changing.
 
 The second run produced the results described below.
@@ -169,6 +169,8 @@ Here's a timeline of the second run:
 The notes below summarize [the metrics for the full
 run](./runs/run2-2018-09-13-02/run2-overall.png).  (Regrettably, confusingly,
 the dashboard is shown in Pacific time, UTC-7.)
+
+![Overall run](./runs/run2-2018-09-13-02/run2-overall.png)
 
 First, a few notes to validate the result:
 
@@ -232,7 +234,11 @@ the disk was saturated.  We did find signs of
 considerable improvement in performance.  Both the degradation in throughput due
 to vacuum and the improvement after applying the OS-7151 workaround are best
 shown in the [more detailed dashboard for the final
-hours](./runs/run2-2018-09-13-02/).  As described above, the `VACUUM FREEZE`
+hours](./runs/run2-2018-09-13-02/run2-degradation.png):
+
+![Degradation period](./runs/run2-2018-09-13-02/run2-degradation.png)
+
+As described above, the `VACUUM FREEZE`
 began at 10:53 local time, exactly when throughput dropped (_for all
 operations_) by well over 50%.  The workaround was applied around 14:20 local
 time, when throughput improved considerably, but not nearly to normal levels.
