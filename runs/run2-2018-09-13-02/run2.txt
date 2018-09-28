@@ -7,10 +7,10 @@ Run 2
 Notes:
 - Created a new dataset for the database with an 8K recordsize.
 - The data from this experiment has been reasonably smooth.
-- There was no observable impact on latency or throughput for the normal vacuum
-  operations.  Shortly before running out of space, I manually kicked off a
-  "VACUUM FREEZE" (see above for timing), which had a major impact on both of
-  these.
+- There was no observable impact on latency or throughput for the first few
+  normal vacuum operations.  Shortly before running out of space, I manually
+  kicked off a "VACUUM FREEZE" (see above for timing), which had a major impact
+  on both of these.
 - After observing the massive degradation, I made a few observations:
   - Dirty buffer writes by non-checkpointer, non-bgwriter backends went up as
     we've seen in other experiments.  However, I did not see dirty buffers

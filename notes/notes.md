@@ -1,4 +1,4 @@
-## Running PostgreSQL
+## Running PostgreSQL (during development)
 
 Starting the docker host:
 
