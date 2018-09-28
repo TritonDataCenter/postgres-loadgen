@@ -226,7 +226,7 @@ At that point:
 - During this time, CPU usage of the load generator went down, reflecting higher
   query latency on the PostgreSQL side.
 
-Around 2018-0917T21:00Z, we observed that the autovacuum process was spending
+Around 2018-09-17T21:00Z, we observed that the autovacuum process was spending
 80% of its wall clock time blocked on `write()`.  Neither the zone throttle nor
 the ZFS write throttle was engaged, but writes appeared to be blocking because
 the disk was saturated.  We did find signs of
@@ -250,9 +250,9 @@ does not recover to normal levels before the experiment was over.
 
 The experiment strongly suggests that for the given workload and system
 configuration, autovacuum can result in a significant increase in latency.
-Freeze vacuums particularly can result in over 2x increase in average latency
-and a commensurate decrease in throughput.  This is the same behavior that we've
-seen in very large scale Manta deployments.  It must be noted that this
+**Freeze vacuums particularly can result in over 2x increase in average latency
+and a commensurate decrease in throughput.**  This is the same behavior that
+we've seen in very large scale Manta deployments.  It must be noted that this
 experiment has reproduced the symptoms we've seen elsewhere, but we don't know
 for sure that it's the same underlying behavior.
 
